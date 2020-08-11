@@ -1,4 +1,4 @@
-// Copyright (C) 2015 Alex Sergeyev
+// Copyright (C) 2020 d98762625
 // This project is licensed under the terms of the MIT license.
 // Read LICENSE file for information for all notices and permissions.
 
@@ -148,23 +148,24 @@ func (tree *Tree) DeleteCIDRb(cidr []byte) error {
 }
 
 // Find CIDR traverses tree to proper Node and returns previously saved information in longest covered IP.
-func (tree *Tree) FindCIDR(cidr string) (interface{}, error) {
+func (tree *Tree) FindCIDR(cidr string) ([]interface{}, error) {
 	return tree.FindCIDRb([]byte(cidr))
 }
 
-func (tree *Tree) FindCIDRb(cidr []byte) (interface{}, error) {
+func (tree *Tree) FindCIDRb(cidr []byte) ([]interface{}, error) {
 	if bytes.IndexByte(cidr, '.') > 0 {
 		ip, mask, err := parsecidr4(cidr)
 		if err != nil {
 			return nil, err
 		}
-		return tree.find32(ip, mask), nil
+		// val, err := tree.find32(ip, mask)
+		return tree.find32(ip, mask)
 	}
 	ip, mask, err := parsecidr6(cidr)
 	if err != nil || ip == nil {
 		return nil, err
 	}
-	return tree.find(ip, mask), nil
+	return tree.find(ip, mask)
 }
 
 func (tree *Tree) insert32(key, mask uint32, value interface{}, overwrite bool) error {
@@ -371,12 +372,13 @@ func (tree *Tree) delete(key net.IP, mask net.IPMask, wholeRange bool) error {
 	return nil
 }
 
-func (tree *Tree) find32(key, mask uint32) (value interface{}) {
+func (tree *Tree) find32(key, mask uint32) (value []interface{}, err error) {
+	value = []interface{}{}
 	bit := startbit
 	node := tree.root
 	for node != nil {
 		if node.value != nil {
-			value = node.value
+			value = append(value, node.value)
 		}
 		if key&bit != 0 {
 			node = node.right
@@ -389,19 +391,20 @@ func (tree *Tree) find32(key, mask uint32) (value interface{}) {
 		bit >>= 1
 
 	}
-	return value
+	return value, nil
 }
 
-func (tree *Tree) find(key net.IP, mask net.IPMask) (value interface{}) {
+func (tree *Tree) find(key net.IP, mask net.IPMask) (value []interface{}, err error) {
+	value = []interface{}{}
 	if len(key) != len(mask) {
-		return ErrBadIP
+		return value, ErrBadIP
 	}
 	var i int
 	bit := startbyte
 	node := tree.root
 	for node != nil {
 		if node.value != nil {
-			value = node.value
+			value = append(value, node.value)
 		}
 		if key[i]&bit != 0 {
 			node = node.right
@@ -416,13 +419,13 @@ func (tree *Tree) find(key net.IP, mask net.IPMask) (value interface{}) {
 			if i >= len(key) {
 				// reached depth of the tree, there should be matching node...
 				if node != nil {
-					value = node.value
+					value = append(value, node.value)
 				}
 				break
 			}
 		}
 	}
-	return value
+	return value, nil
 }
 
 func (tree *Tree) newnode() (p *node) {
