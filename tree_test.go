@@ -205,8 +205,8 @@ func TestSet(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	if inf[0].(int) != 2 {
-		t.Errorf("Wrong value, expected 2, got %v", inf)
+	if inf[0].(int) != 1 || inf[1] != 2 {
+		t.Errorf("Wrong value, expected 1, 2, got %v", inf)
 	}
 	inf, err = tr.FindCIDR("1.1.1.0/24")
 	if err != nil {
@@ -231,8 +231,8 @@ func TestSet(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	if inf[0].(int) != 2 {
-		t.Errorf("Wrong value, expected 2, got %v", inf)
+	if inf[0].(int) != 3 || inf[1] != 2 {
+		t.Errorf("Wrong value, expected [3 2], got %v", inf)
 	}
 	inf, err = tr.FindCIDR("1.1.1.0/24")
 	if err != nil {
@@ -251,7 +251,7 @@ func TestSet(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	if inf[0].(int) != 4 {
+	if inf[0].(int) != 3 || inf[1] != 4 {
 		t.Errorf("Wrong value, expected 4, got %v", inf)
 	}
 	inf, err = tr.FindCIDR("1.1.1.0/24")
@@ -278,8 +278,8 @@ func TestRegression(t *testing.T) {
 	inf, err := tr.FindCIDR("1.1.1.128")
 	if err != nil {
 		t.Error(err)
-	} else if inf != nil {
-		t.Errorf("Wrong value, expected nil, got %v", inf)
+	} else if inf == nil || len(inf) > 0 {
+		t.Errorf("Wrong value, expected [], got %v", inf)
 	}
 }
 
@@ -307,8 +307,8 @@ func TestTree6(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	if inf != nil {
-		t.Errorf("Wrong value, expected nil, got %v", inf)
+	if inf == nil || len(inf) > 0 {
+		t.Errorf("Wrong value, expected [], got %v", inf)
 	}
 
 	// Subnet
@@ -322,7 +322,7 @@ func TestTree6(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	if inf[0].(int) != 4 {
+	if inf[0].(int) != 3 || inf[1] != 4 {
 		t.Errorf("Wrong value, expected 4, got %v", inf)
 	}
 
@@ -349,7 +349,7 @@ func TestRegression6(t *testing.T) {
 	inf, err := tr.FindCIDR("2620:10f:d000:100::5/128")
 	if err != nil {
 		t.Errorf("Could not get /128 address from the tree, error: %s", err)
-	} else if inf[0].(int) != 12345 {
+	} else if inf[0].(int) != 54321 || inf[1] != 12345 {
 		t.Errorf("Wrong value from /128 test, got %d, expected 12345", inf)
 	}
 }
